@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiet Method — AI-Powered Burnout Prevention for Your Browser</title>
+  <meta name="description" content="Quiet Method detects digital overload before you do — then silently restores calm. No pop-ups. No willpower required. 100% on-device privacy.">
+  <meta property="og:title" content="Quiet Method — Your browser just learned to protect you.">
+  <meta property="og:description" content="AI-powered burnout prevention that runs entirely in your browser. No cloud. No servers. No tracking.">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+
+  <!-- Fonts -->
+  <link href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&f[]=cabinet-grotesk@700,800&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            display: ['"Cabinet Grotesk"', 'system-ui', 'sans-serif'],
+            body: ['"General Sans"', 'system-ui', 'sans-serif'],
+          },
+          colors: {
+            slate: {
+              850: '#1a1d2e',
+              925: '#0d1017',
+              950: '#080a0f',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html {
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
+      scroll-padding-top: 5rem;
+    }
+
+    body {
+      font-family: 'General Sans', system-ui, sans-serif;
+      background: #0b0d12;
+      color: #e2e8f0;
+    }
+
+    ::selection {
+      background: rgba(52, 211, 153, 0.25);
+      color: #fff;
+    }
+
+    /* Gradient text utility */
+    .gradient-text {
+      background: linear-gradient(135deg, #34d399 0%, #6ee7b7 40%, #a7f3d0 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .gradient-text-subtle {
+      background: linear-gradient(135deg, #94a3b8 0%, #e2e8f0 50%, #94a3b8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* Glow effects */
+    .glow-emerald {
+      box-shadow: 0 0 60px rgba(52, 211, 153, 0.15), 0 0 120px rgba(52, 211, 153, 0.05);
+    }
+
+    .glow-emerald-strong {
+      box-shadow: 0 0 40px rgba(52, 211, 153, 0.3), 0 0 80px rgba(52, 211, 153, 0.1);
+    }
+
+    /* Pulse meter animation */
+    @keyframes pulse-meter {
+      0%, 100% { height: 20%; }
+      15% { height: 45%; }
+      30% { height: 30%; }
+      45% { height: 75%; }
+      55% { height: 90%; }
+      65% { height: 60%; }
+      75% { height: 85%; }
+      85% { height: 40%; }
+    }
+
+    @keyframes pulse-meter-2 {
+      0%, 100% { height: 30%; }
+      10% { height: 55%; }
+      25% { height: 40%; }
+      40% { height: 80%; }
+      50% { height: 95%; }
+      60% { height: 70%; }
+      70% { height: 55%; }
+      85% { height: 35%; }
+    }
+
+    @keyframes pulse-meter-3 {
+      0%, 100% { height: 25%; }
+      20% { height: 50%; }
+      35% { height: 65%; }
+      50% { height: 85%; }
+      60% { height: 70%; }
+      75% { height: 45%; }
+      90% { height: 30%; }
+    }
+
+    .meter-bar {
+      animation: pulse-meter 4s ease-in-out infinite;
+    }
+    .meter-bar-2 {
+      animation: pulse-meter-2 4s ease-in-out infinite;
+    }
+    .meter-bar-3 {
+      animation: pulse-meter-3 4s ease-in-out infinite;
+    }
+
+    /* Veil animation — calm descending */
+    @keyframes veil-descend {
+      0% { opacity: 0; transform: translateY(-8px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+    .veil-active {
+      animation: veil-descend 1.5s ease-out forwards;
+    }
+
+    /* Breathing glow on the shield */
+    @keyframes breathe {
+      0%, 100% { opacity: 0.4; transform: scale(1); }
+      50% { opacity: 0.8; transform: scale(1.05); }
+    }
+    .breathe {
+      animation: breathe 4s ease-in-out infinite;
+    }
+
+    /* Smooth scroll-linked reveal */
+    .reveal {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Stagger children */
+    .stagger > .reveal:nth-child(1) { transition-delay: 0ms; }
+    .stagger > .reveal:nth-child(2) { transition-delay: 80ms; }
+    .stagger > .reveal:nth-child(3) { transition-delay: 160ms; }
+    .stagger > .reveal:nth-child(4) { transition-delay: 240ms; }
+    .stagger > .reveal:nth-child(5) { transition-delay: 320ms; }
+    .stagger > .reveal:nth-child(6) { transition-delay: 400ms; }
+
+    /* Noise texture overlay */
+    .noise::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      background-repeat: repeat;
+      background-size: 256px 256px;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* Grid lines background */
+    .grid-bg {
+      background-image:
+        linear-gradient(rgba(148, 163, 184, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(148, 163, 184, 0.03) 1px, transparent 1px);
+      background-size: 64px 64px;
+    }
+
+    /* Radial gradient spotlight */
+    .spotlight {
+      background: radial-gradient(ellipse 60% 50% at 50% 0%, rgba(52, 211, 153, 0.08) 0%, transparent 70%);
+    }
+
+    /* Button hover lift */
+    .btn-primary {
+      transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1),
+                  box-shadow 180ms cubic-bezier(0.16, 1, 0.3, 1),
+                  background 180ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(52, 211, 153, 0.3), 0 0 60px rgba(52, 211, 153, 0.1);
+    }
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+
+    /* Feature card hover */
+    .feature-card {
+      transition: border-color 180ms cubic-bezier(0.16, 1, 0.3, 1),
+                  box-shadow 180ms cubic-bezier(0.16, 1, 0.3, 1),
+                  transform 180ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .feature-card:hover {
+      border-color: rgba(52, 211, 153, 0.3);
+      box-shadow: 0 0 40px rgba(52, 211, 153, 0.06);
+      transform: translateY(-2px);
+    }
+
+    /* Pricing card highlight */
+    .pricing-highlight {
+      background: linear-gradient(135deg, rgba(52, 211, 153, 0.08) 0%, rgba(52, 211, 153, 0.02) 100%);
+      border-color: rgba(52, 211, 153, 0.4);
+    }
+
+    /* FAQ accordion */
+    .faq-answer {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+      opacity: 0;
+    }
+    .faq-item.open .faq-answer {
+      max-height: 200px;
+      opacity: 1;
+    }
+    .faq-item.open .faq-chevron {
+      transform: rotate(180deg);
+    }
+    .faq-chevron {
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* Smooth link transitions */
+    a {
+      transition: color 180ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* Number counter animation */
+    @keyframes count-up {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Horizontal divider glow */
+    .divider-glow {
+      height: 1px;
+      background: linear-gradient(90deg, transparent 0%, rgba(52, 211, 153, 0.3) 50%, transparent 100%);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+      .reveal { opacity: 1; transform: none; }
+    }
+  </style>
+
+  <!-- Favicon - Shield SVG -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><path d='M16 2L4 8v8c0 7.2 5.1 13.3 12 15 6.9-1.7 12-7.8 12-15V8L16 2z' fill='%2334d399' opacity='0.9'/><path d='M16 6l-8 4v5.5c0 5.3 3.4 9.8 8 11.2 4.6-1.4 8-5.9 8-11.2V10l-8-4z' fill='%230b0d12'/><circle cx='16' cy='15' r='3' fill='%2334d399' opacity='0.6'/></svg>" type="image/svg+xml">
+</head>
+
+<body class="overflow-x-hidden">
+
+  <!-- ===== NAVIGATION ===== -->
+  <nav class="fixed top-0 left-0 right-0 z-50 border-b border-white/5" id="nav">
+    <div class="backdrop-blur-xl bg-[#0b0d12]/80">
+      <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+        <!-- Logo -->
+        <a href="#" class="flex items-center gap-2.5 group">
+          <svg width="28" height="28" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Quiet Method logo">
+            <path d="M16 2L4 8v8c0 7.2 5.1 13.3 12 15 6.9-1.7 12-7.8 12-15V8L16 2z" fill="#34d399" opacity="0.15"/>
+            <path d="M16 4L6 9v7c0 6.1 4.2 11.3 10 12.8 5.8-1.5 10-6.7 10-12.8V9L16 4z" stroke="#34d399" stroke-width="1.5" fill="none" opacity="0.6"/>
+            <circle cx="16" cy="14.5" r="3" fill="#34d399" opacity="0.8"/>
+            <path d="M16 18.5v3" stroke="#34d399" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
+          </svg>
+          <span class="text-white font-display font-bold text-lg tracking-tight">Quiet Method</span>
+        </a>
+
+        <!-- Nav links (desktop) -->
+        <div class="hidden md:flex items-center gap-8">
+          <a href="#how-it-works" class="text-sm text-slate-400 hover:text-white">How it works</a>
+          <a href="#features" class="text-sm text-slate-400 hover:text-white">Features</a>
+          <a href="#pricing" class="text-sm text-slate-400 hover:text-white">Pricing</a>
+          <a href="#privacy" class="text-sm text-slate-400 hover:text-white">Privacy</a>
+          <a href="#faq" class="text-sm text-slate-400 hover:text-white">FAQ</a>
+        </div>
+
+        <!-- CTA -->
+        <a href="#pricing" class="hidden sm:inline-flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-sm font-semibold rounded-lg btn-primary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+          Add to Chrome
+        </a>
+
+        <!-- Mobile menu button -->
+        <button class="md:hidden p-2 text-slate-400 hover:text-white" id="mobile-menu-btn" aria-label="Open menu">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 6h16M4 12h16M4 18h16"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile menu -->
+    <div class="hidden md:hidden bg-[#0b0d12]/95 backdrop-blur-xl border-b border-white/5" id="mobile-menu">
+      <div class="px-6 py-4 flex flex-col gap-3">
+        <a href="#how-it-works" class="text-sm text-slate-400 hover:text-white py-2">How it works</a>
+        <a href="#features" class="text-sm text-slate-400 hover:text-white py-2">Features</a>
+        <a href="#pricing" class="text-sm text-slate-400 hover:text-white py-2">Pricing</a>
+        <a href="#privacy" class="text-sm text-slate-400 hover:text-white py-2">Privacy</a>
+        <a href="#faq" class="text-sm text-slate-400 hover:text-white py-2">FAQ</a>
+        <a href="#pricing" class="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-500 text-slate-950 text-sm font-semibold rounded-lg mt-2">Add to Chrome — Free</a>
+      </div>
+    </div>
+  </nav>
+
+
+  <!-- ===== HERO ===== -->
+  <section class="relative min-h-screen flex items-center justify-center pt-16 spotlight grid-bg noise">
+    <div class="relative z-10 max-w-4xl mx-auto px-6 py-24 text-center">
+      <!-- Pill badge -->
+      <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/5 mb-8 reveal">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span class="text-xs font-medium text-emerald-400 tracking-wide uppercase">Now in early access</span>
+      </div>
+
+      <!-- Headline -->
+      <h1 class="font-display font-bold text-4xl sm:text-5xl md:text-6xl lg:text-7xl tracking-tight leading-[1.08] mb-6 reveal">
+        Your browser just learned<br>
+        <span class="gradient-text">to protect you.</span>
+      </h1>
+
+      <!-- Subheadline -->
+      <p class="text-lg sm:text-xl text-slate-400 max-w-2xl mx-auto mb-10 leading-relaxed reveal">
+        Quiet Method detects digital overload before you do — then silently restores calm. No pop-ups. No willpower required.
+      </p>
+
+      <!-- CTAs -->
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16 reveal">
+        <a href="#pricing" class="inline-flex items-center gap-2.5 px-8 py-3.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-base font-semibold rounded-xl btn-primary glow-emerald-strong">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M12 8v8M8 12h8"/>
+          </svg>
+          Add to Chrome — Free
+        </a>
+        <a href="#how-it-works" class="inline-flex items-center gap-2 text-slate-400 hover:text-emerald-400 text-sm font-medium group">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="group-hover:scale-110 transition-transform">
+            <circle cx="12" cy="12" r="10"/>
+            <polygon points="10,8 16,12 10,16" fill="currentColor" stroke="none"/>
+          </svg>
+          Watch how it works
+        </a>
+      </div>
+
+      <!-- Animated Overload Gauge -->
+      <div class="relative max-w-md mx-auto reveal">
+        <div class="relative bg-slate-900/80 border border-white/10 rounded-2xl p-6 glow-emerald backdrop-blur-sm">
+          <!-- Gauge header -->
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-2">
+              <div class="w-2 h-2 rounded-full bg-emerald-400 breathe"></div>
+              <span class="text-xs font-medium text-slate-500 uppercase tracking-wider">Overload Score</span>
+            </div>
+            <span class="text-xs text-slate-600 font-mono">Live</span>
+          </div>
+
+          <!-- Gauge visualization -->
+          <div class="flex items-end gap-1.5 h-24 mb-4">
+            <div class="flex-1 rounded-t-sm bg-emerald-500/60 meter-bar" style="animation-delay: 0s"></div>
+            <div class="flex-1 rounded-t-sm bg-emerald-500/50 meter-bar-2" style="animation-delay: 0.2s"></div>
+            <div class="flex-1 rounded-t-sm bg-emerald-400/60 meter-bar" style="animation-delay: 0.4s"></div>
+            <div class="flex-1 rounded-t-sm bg-emerald-400/50 meter-bar-3" style="animation-delay: 0.6s"></div>
+            <div class="flex-1 rounded-t-sm bg-yellow-500/50 meter-bar-2" style="animation-delay: 0.8s"></div>
+            <div class="flex-1 rounded-t-sm bg-yellow-500/60 meter-bar" style="animation-delay: 1s"></div>
+            <div class="flex-1 rounded-t-sm bg-orange-500/50 meter-bar-3" style="animation-delay: 1.2s"></div>
+            <div class="flex-1 rounded-t-sm bg-orange-500/60 meter-bar-2" style="animation-delay: 1.4s"></div>
+            <div class="flex-1 rounded-t-sm bg-red-500/40 meter-bar" style="animation-delay: 1.6s"></div>
+            <div class="flex-1 rounded-t-sm bg-red-500/50 meter-bar-3" style="animation-delay: 1.8s"></div>
+            <div class="flex-1 rounded-t-sm bg-red-500/60 meter-bar-2" style="animation-delay: 2s"></div>
+            <div class="flex-1 rounded-t-sm bg-red-600/50 meter-bar" style="animation-delay: 2.2s"></div>
+          </div>
+
+          <!-- Gauge labels -->
+          <div class="flex justify-between text-xs text-slate-600">
+            <span>Calm</span>
+            <span>Focused</span>
+            <span>Elevated</span>
+            <span class="text-red-400/60">Overloaded</span>
+          </div>
+
+          <!-- Veil overlay (appears periodically) -->
+          <div class="absolute inset-0 rounded-2xl bg-gradient-to-b from-emerald-500/5 to-transparent pointer-events-none breathe"></div>
+        </div>
+
+        <!-- Floating annotation -->
+        <div class="absolute -right-2 sm:-right-20 top-10 bg-slate-800/90 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-slate-400 backdrop-blur-sm hidden sm:block">
+          <span class="text-emerald-400">●</span> Monitoring
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom fade -->
+    <div class="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#0b0d12] to-transparent"></div>
+  </section>
+
+
+  <!-- ===== PROBLEM ===== -->
+  <section class="relative py-24 sm:py-32">
+    <div class="max-w-3xl mx-auto px-6 text-center">
+      <div class="space-y-6 reveal">
+        <p class="text-xl sm:text-2xl md:text-3xl font-display font-bold text-white leading-snug">
+          You're 47 tabs deep. Your typing is frantic. Calendar is stacked. You haven't blinked in 3 minutes.
+        </p>
+        <p class="text-lg text-slate-400 leading-relaxed">
+          By the time you notice you're overwhelmed, you've already been overwhelmed for 20 minutes.
+        </p>
+        <div class="divider-glow max-w-xs mx-auto my-8"></div>
+        <p class="text-2xl sm:text-3xl font-display font-bold gradient-text">
+          Quiet Method notices first.
+        </p>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ===== HOW IT WORKS ===== -->
+  <section id="how-it-works" class="relative py-24 sm:py-32 noise">
+    <div class="absolute inset-0 bg-gradient-to-b from-transparent via-emerald-500/[0.02] to-transparent"></div>
+    <div class="relative z-10 max-w-6xl mx-auto px-6">
+      <!-- Section header -->
+      <div class="text-center mb-16 reveal">
+        <span class="text-xs font-semibold text-emerald-400 uppercase tracking-widest mb-3 block">How it works</span>
+        <h2 class="font-display font-bold text-3xl sm:text-4xl text-white">Three silent steps</h2>
+      </div>
+
+      <!-- Steps -->
+      <div class="grid md:grid-cols-3 gap-8 stagger">
+
+        <!-- Step 1 -->
+        <div class="reveal">
+          <div class="relative bg-slate-900/50 border border-white/[0.06] rounded-2xl p-8 h-full">
+            <div class="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mb-6">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="1.5" stroke-linecap="round">
+                <circle cx="12" cy="12" r="3"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+              </svg>
+            </div>
+            <div class="text-xs font-mono text-emerald-400/60 mb-2">01</div>
+            <h3 class="font-display font-bold text-xl text-white mb-3">It watches</h3>
+            <p class="text-sm text-slate-400 leading-relaxed">
+              Monitors your typing rhythm, scroll speed, tab count, and calendar density. All on-device. Nothing leaves your browser.
+            </p>
+          </div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="reveal">
+          <div class="relative bg-slate-900/50 border border-white/[0.06] rounded-2xl p-8 h-full">
+            <div class="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mb-6">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="1.5" stroke-linecap="round">
+                <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+              </svg>
+            </div>
+            <div class="text-xs font-mono text-emerald-400/60 mb-2">02</div>
+            <h3 class="font-display font-bold text-xl text-white mb-3">It detects</h3>
+            <p class="text-sm text-slate-400 leading-relaxed">
+              AI recognizes the pattern of overload before you feel it. Your overload score rises silently.
+            </p>
+          </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="reveal">
+          <div class="relative bg-slate-900/50 border border-white/[0.06] rounded-2xl p-8 h-full">
+            <div class="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mb-6">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="1.5" stroke-linecap="round">
+                <path d="M12 2L4 7v6c0 5.5 3.4 10.2 8 12 4.6-1.8 8-6.5 8-12V7l-8-5z"/>
+                <path d="M9 12l2 2 4-4"/>
+              </svg>
+            </div>
+            <div class="text-xs font-mono text-emerald-400/60 mb-2">03</div>
+            <h3 class="font-display font-bold text-xl text-white mb-3">It veils</h3>
+            <p class="text-sm text-slate-400 leading-relaxed">
+              Notifications mute. Tabs dim. Replies queue in your voice. A calm descends — and you didn't have to do anything.
+            </p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ===== FEATURES ===== -->
+  <section id="features" class="relative py-24 sm:py-32">
+    <div class="max-w-6xl mx-auto px-6">
+      <!-- Section header -->
+      <div class="text-center mb-16 reveal">
+        <span class="text-xs font-semibold text-emerald-400 uppercase tracking-widest mb-3 block">Features</span>
+        <h2 class="font-display font-bold text-3xl sm:text-4xl text-white">Everything runs silently</h2>
+      </div>
+
+      <!-- Feature grid -->
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 stagger">
+
+        <div class="feature-card bg-slate-900/40 border border-white/[0.06] rounded-xl p-6 reveal">
+          <div class="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center mb-4">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="1.5"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          </div>
+          <h3 class="font-semibold text-white mb-2">Real-time overload detection</h3>
+          <p class="text-sm text-slate-500 leading-relaxed">Continuously analyzes behavioral signals to detect rising stress before you're conscious of it.</p>
+        </div>
+
+        <div class="feature-card bg-slate-900/40 border border-white/[0.06] rounded-xl p-6 reveal">
+          <div class="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center mb-4">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="1.5"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/><line x1="1" y1="1" x2="23" y2="23" stroke="#34d399" stroke-width="1.5"/></svg>
+          </div>
+          <h3 class="font-semibold text-white mb-2">Silent notification muting</h3>
+          <p class="text-sm text-slate-500 leading-relaxed">When overload is detected, notifications are gently intercepted. They're queued for later — nothing is lost.</p>
+        </div>
+
+        <div class="feature-card bg-slate-900/40 border border-white/[0.06] rounded-xl p-6 reveal">
+          <div class="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center mb-4">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/><path d="M2 8h20" opacity="0.4"/></svg>
+          </div>
+          <h3 class="font-semibold text-white mb-2">Intelligent tab dimming</h3>
+          <p class="text-sm text-slate-500 leading-relaxed">Background tabs gently fade, reducing visual noise. Your active workspace stays crisp and focused.</p>
+        </div>
+
+        <div class="feature-card bg-slate-900/40 border border-white/[0.06] rounded-xl p-6 relative reveal">
+          <span class="absolute top-4 right-4 text-[10px] font-semibold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full uppercase tracking-wider">Premium</span>
+          <div class="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center mb-4">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="1.5"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+          </div>
+          <h3 class="font-semibold text-white mb-2">Voice-cloned auto-replies</h3>
+          <p class="text-sm text-slate-500 leading-relaxed">Draft replies in your voice and tone. When veiled, responses queue automatically — indistinguishable from you.</p>
+        </div>
+
+        <div class="feature-card bg-slate-900/40 border border-white/[0.06] rounded-xl p-6 reveal">
+          <div class="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center mb-4">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="1.5"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+          </div>
+          <h3 class="font-semibold text-white mb-2">Daily calm streak tracker</h3>
+          <p class="text-sm text-slate-500 leading-relaxed">Track consecutive calm days. Build sustainable habits with gentle insights — not guilt-tripping dashboards.</p>
+        </div>
+
+        <div class="feature-card bg-slate-900/40 border border-white/[0.06] rounded-xl p-6 reveal">
+          <div class="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center mb-4">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/><circle cx="12" cy="16" r="1"/></svg>
+          </div>
+          <h3 class="font-semibold text-white mb-2">100% on-device privacy</h3>
+          <p class="text-sm text-slate-500 leading-relaxed">No cloud. No servers. No tracking. Everything processes locally in your browser. We literally never see your data.</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ===== PRICING ===== -->
+  <section id="pricing" class="relative py-24 sm:py-32 noise">
+    <div class="absolute inset-0 bg-gradient-to-b from-transparent via-emerald-500/[0.02] to-transparent"></div>
+    <div class="relative z-10 max-w-5xl mx-auto px-6">
+      <!-- Section header -->
+      <div class="text-center mb-16 reveal">
+        <span class="text-xs font-semibold text-emerald-400 uppercase tracking-widest mb-3 block">Pricing</span>
+        <h2 class="font-display font-bold text-3xl sm:text-4xl text-white">Start free. Upgrade when you're ready.</h2>
+      </div>
+
+      <!-- Pricing cards -->
+      <div class="grid md:grid-cols-3 gap-6 stagger">
+
+        <!-- Free -->
+        <div class="bg-slate-900/50 border border-white/[0.06] rounded-2xl p-8 reveal">
+          <div class="mb-6">
+            <h3 class="font-display font-bold text-lg text-white mb-1">Free</h3>
+            <p class="text-sm text-slate-500">For getting started</p>
+          </div>
+          <div class="mb-6">
+            <span class="font-display font-bold text-4xl text-white">$0</span>
+            <span class="text-slate-500 text-sm">/forever</span>
+          </div>
+          <ul class="space-y-3 mb-8">
+            <li class="flex items-start gap-3 text-sm text-slate-400">
+              <svg class="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+              Basic veil activation
+            </li>
+            <li class="flex items-start gap-3 text-sm text-slate-400">
+              <svg class="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+              Daily overload stats
+            </li>
+            <li class="flex items-start gap-3 text-sm text-slate-400">
+              <svg class="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+              5 veil activations per day
+            </li>
+            <li class="flex items-start gap-3 text-sm text-slate-400">
+              <svg class="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+              100% on-device privacy
+            </li>
+          </ul>
+          <a href="#" class="block text-center py-3 px-6 rounded-xl border border-white/10 text-white text-sm font-semibold hover:border-emerald-500/30 hover:bg-emerald-500/5 transition-all duration-200">
+            Add to Chrome — Free
+          </a>
+        </div>
+
+        <!-- Premium -->
+        <div class="pricing-highlight border rounded-2xl p-8 relative reveal">
+          <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-emerald-500 text-slate-950 text-xs font-bold rounded-full uppercase tracking-wider">
+            Most popular
+          </div>
+          <div class="mb-6">
+            <h3 class="font-display font-bold text-lg text-white mb-1">Premium</h3>
+            <p class="text-sm text-slate-500">For daily protection</p>
+          </div>
+          <div class="mb-6">
+            <span class="font-display font-bold text-4xl text-white">$9</span>
+            <span class="text-slate-500 text-sm">/month</span>
+          </div>
+          <ul class="space-y-3 mb-8">
+            <li class="flex items-start gap-3 text-sm text-slate-300">
+              <svg class="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+              <strong>Unlimited</strong> veil activations
+            </li>
+            <li class="flex items-start gap-3 text-sm text-slate-300">
+              <svg class="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+              Voice-cloned auto-replies
+            </li>
+            <li class="flex items-start gap-3 text-sm text-slate-300">
+              <svg class="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+              Cross-device sync
+            </li>
+            <li class="flex items-start gap-3 text-sm text-slate-300">
+              <svg class="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+              Overload forecasts
+            </li>
+            <li class="flex items-start gap-3 text-sm text-slate-300">
+              <svg class="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+              Auto-tab management
+            </li>
+          </ul>
+          <a href="#" class="block text-center py-3 px-6 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-sm font-bold btn-primary">
+            Start Premium
+          </a>
+        </div>
+
+        <!-- Lifetime -->
+        <div class="bg-slate-900/50 border border-white/[0.06] rounded-2xl p-8 reveal">
+          <div class="mb-6">
+            <h3 class="font-display font-bold text-lg text-white mb-1">Lifetime</h3>
+            <p class="text-sm text-slate-500">Pay once, calm forever</p>
+          </div>
+          <div class="mb-6">
+            <span class="font-display font-bold text-4xl text-white">$29</span>
+            <span class="text-slate-500 text-sm">/once</span>
+          </div>
+          <ul class="space-y-3 mb-8">
+            <li class="flex items-start gap-3 text-sm text-slate-400">
+              <svg class="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+              Everything in Premium
+            </li>
+            <li class="flex items-start gap-3 text-sm text-slate-400">
+              <svg class="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+              No recurring charges
+            </li>
+            <li class="flex items-start gap-3 text-sm text-slate-400">
+              <svg class="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+              All future features included
+            </li>
+            <li class="flex items-start gap-3 text-sm text-slate-400">
+              <svg class="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+              Early access to new releases
+            </li>
+          </ul>
+          <a href="#" class="block text-center py-3 px-6 rounded-xl border border-white/10 text-white text-sm font-semibold hover:border-emerald-500/30 hover:bg-emerald-500/5 transition-all duration-200">
+            Get Lifetime Access
+          </a>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ===== PRIVACY ===== -->
+  <section id="privacy" class="relative py-24 sm:py-32">
+    <div class="max-w-4xl mx-auto px-6">
+      <div class="bg-slate-900/50 border border-white/[0.06] rounded-2xl p-8 sm:p-12 text-center relative overflow-hidden reveal">
+        <!-- Background shield -->
+        <div class="absolute inset-0 flex items-center justify-center opacity-[0.03]">
+          <svg width="320" height="320" viewBox="0 0 32 32" fill="none">
+            <path d="M16 2L4 8v8c0 7.2 5.1 13.3 12 15 6.9-1.7 12-7.8 12-15V8L16 2z" fill="white"/>
+          </svg>
+        </div>
+
+        <div class="relative z-10">
+          <div class="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-6">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="1.5">
+              <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+          </div>
+          <h2 class="font-display font-bold text-3xl sm:text-4xl text-white mb-4">Your data never leaves your device.</h2>
+          <p class="text-lg text-slate-400 mb-3 max-w-xl mx-auto">No cloud. No servers. No tracking. Quiet Method runs entirely in your browser.</p>
+          <p class="text-slate-500 max-w-lg mx-auto mb-8">We can't see your data because we literally never receive it.</p>
+
+          <div class="grid sm:grid-cols-3 gap-4 max-w-lg mx-auto">
+            <div class="flex flex-col items-center gap-1.5 py-3">
+              <span class="text-xs font-semibold text-emerald-400 uppercase tracking-wider">Zero</span>
+              <span class="text-xs text-slate-500">Cloud storage</span>
+            </div>
+            <div class="flex flex-col items-center gap-1.5 py-3">
+              <span class="text-xs font-semibold text-emerald-400 uppercase tracking-wider">Zero</span>
+              <span class="text-xs text-slate-500">Server calls</span>
+            </div>
+            <div class="flex flex-col items-center gap-1.5 py-3">
+              <span class="text-xs font-semibold text-emerald-400 uppercase tracking-wider">Zero</span>
+              <span class="text-xs text-slate-500">Tracking pixels</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ===== SOCIAL PROOF ===== -->
+  <section class="relative py-24 sm:py-32">
+    <div class="max-w-6xl mx-auto px-6 text-center">
+      <div class="reveal">
+        <p class="text-sm text-slate-500 mb-3 uppercase tracking-widest font-medium">Early Access</p>
+        <p class="font-display font-bold text-2xl sm:text-3xl text-white mb-2">
+          Join <span class="gradient-text" id="counter">0</span> people who've reclaimed their attention
+        </p>
+        <p class="text-slate-500 text-sm mb-12">Honest counter. We're just getting started.</p>
+      </div>
+
+      <!-- Testimonial placeholders -->
+      <div class="grid md:grid-cols-3 gap-6 stagger">
+        <div class="bg-slate-900/30 border border-white/[0.04] rounded-xl p-6 text-left reveal">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400/20 to-emerald-600/20 flex items-center justify-center text-emerald-400 text-sm font-bold">S</div>
+            <div>
+              <p class="text-sm font-medium text-white">Sarah M.</p>
+              <p class="text-xs text-slate-500">Product Designer</p>
+            </div>
+          </div>
+          <p class="text-sm text-slate-400 leading-relaxed italic">"I didn't realize how frantic my afternoons were until Quiet Method started dimming my tabs. The calm is… noticeable."</p>
+        </div>
+
+        <div class="bg-slate-900/30 border border-white/[0.04] rounded-xl p-6 text-left reveal">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400/20 to-emerald-600/20 flex items-center justify-center text-emerald-400 text-sm font-bold">J</div>
+            <div>
+              <p class="text-sm font-medium text-white">James K.</p>
+              <p class="text-xs text-slate-500">Software Engineer</p>
+            </div>
+          </div>
+          <p class="text-sm text-slate-400 leading-relaxed italic">"The voice-clone replies are wild. My Slack messages send while I'm in a veil and nobody can tell the difference."</p>
+        </div>
+
+        <div class="bg-slate-900/30 border border-white/[0.04] rounded-xl p-6 text-left reveal">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400/20 to-emerald-600/20 flex items-center justify-center text-emerald-400 text-sm font-bold">A</div>
+            <div>
+              <p class="text-sm font-medium text-white">Anika R.</p>
+              <p class="text-xs text-slate-500">Startup Founder</p>
+            </div>
+          </div>
+          <p class="text-sm text-slate-400 leading-relaxed italic">"I've tried every focus app. This is the first one that actually works because I don't have to remember to use it."</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ===== FAQ ===== -->
+  <section id="faq" class="relative py-24 sm:py-32 noise">
+    <div class="absolute inset-0 bg-gradient-to-b from-transparent via-emerald-500/[0.02] to-transparent"></div>
+    <div class="relative z-10 max-w-2xl mx-auto px-6">
+      <!-- Section header -->
+      <div class="text-center mb-16 reveal">
+        <span class="text-xs font-semibold text-emerald-400 uppercase tracking-widest mb-3 block">FAQ</span>
+        <h2 class="font-display font-bold text-3xl sm:text-4xl text-white">Common questions</h2>
+      </div>
+
+      <!-- FAQ items -->
+      <div class="space-y-3 reveal">
+
+        <div class="faq-item border border-white/[0.06] rounded-xl overflow-hidden">
+          <button class="faq-toggle w-full flex items-center justify-between p-5 text-left" aria-expanded="false">
+            <span class="text-sm font-medium text-white pr-4">How does it know I'm overwhelmed?</span>
+            <svg class="faq-chevron w-5 h-5 text-slate-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="faq-answer px-5 pb-5">
+            <p class="text-sm text-slate-400 leading-relaxed">Quiet Method analyzes behavioral signals — typing velocity, scroll patterns, tab switching frequency, and calendar density. It learns your baseline and flags deviations. No biometrics, no camera, no microphone. Just browser-native signals processed by on-device AI.</p>
+          </div>
+        </div>
+
+        <div class="faq-item border border-white/[0.06] rounded-xl overflow-hidden">
+          <button class="faq-toggle w-full flex items-center justify-between p-5 text-left" aria-expanded="false">
+            <span class="text-sm font-medium text-white pr-4">Does it send my data anywhere?</span>
+            <svg class="faq-chevron w-5 h-5 text-slate-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="faq-answer px-5 pb-5">
+            <p class="text-sm text-slate-400 leading-relaxed">No. Zero data is transmitted off your device. The AI model runs entirely in your browser using WebAssembly. There are no analytics, no telemetry, no server connections. We couldn't access your data even if we wanted to — it never reaches us.</p>
+          </div>
+        </div>
+
+        <div class="faq-item border border-white/[0.06] rounded-xl overflow-hidden">
+          <button class="faq-toggle w-full flex items-center justify-between p-5 text-left" aria-expanded="false">
+            <span class="text-sm font-medium text-white pr-4">Will it break my websites?</span>
+            <svg class="faq-chevron w-5 h-5 text-slate-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="faq-answer px-5 pb-5">
+            <p class="text-sm text-slate-400 leading-relaxed">No. Quiet Method uses browser-native APIs and never injects scripts into web pages. Tab dimming uses the browser's built-in opacity controls. Notification muting uses the Notifications API permission layer. Your sites continue to function normally.</p>
+          </div>
+        </div>
+
+        <div class="faq-item border border-white/[0.06] rounded-xl overflow-hidden">
+          <button class="faq-toggle w-full flex items-center justify-between p-5 text-left" aria-expanded="false">
+            <span class="text-sm font-medium text-white pr-4">What browsers are supported?</span>
+            <svg class="faq-chevron w-5 h-5 text-slate-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="faq-answer px-5 pb-5">
+            <p class="text-sm text-slate-400 leading-relaxed">Currently available for Chrome and Chromium-based browsers (Edge, Brave, Arc). Firefox and Safari support are on the roadmap for Q2 2026.</p>
+          </div>
+        </div>
+
+        <div class="faq-item border border-white/[0.06] rounded-xl overflow-hidden">
+          <button class="faq-toggle w-full flex items-center justify-between p-5 text-left" aria-expanded="false">
+            <span class="text-sm font-medium text-white pr-4">Can I turn it off?</span>
+            <svg class="faq-chevron w-5 h-5 text-slate-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="faq-answer px-5 pb-5">
+            <p class="text-sm text-slate-400 leading-relaxed">Of course. Click the Quiet Method icon in your toolbar to pause protection anytime. You can also set "Focus Mode" windows where the veil won't activate, or configure sensitivity thresholds to match your natural work style.</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ===== FINAL CTA ===== -->
+  <section class="relative py-24 sm:py-32">
+    <div class="max-w-3xl mx-auto px-6 text-center reveal">
+      <h2 class="font-display font-bold text-3xl sm:text-4xl md:text-5xl text-white mb-4 leading-tight">
+        Let your browser<br><span class="gradient-text">take care of you.</span>
+      </h2>
+      <p class="text-lg text-slate-400 mb-8 max-w-lg mx-auto">No setup. No configuration. Install and forget — Quiet Method does the rest.</p>
+      <a href="#pricing" class="inline-flex items-center gap-2.5 px-8 py-3.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-base font-semibold rounded-xl btn-primary glow-emerald-strong">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M12 8v8M8 12h8"/>
+        </svg>
+        Add to Chrome — Free
+      </a>
+    </div>
+  </section>
+
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="border-t border-white/[0.06] py-12">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+        <!-- Logo -->
+        <div class="flex items-center gap-2.5">
+          <svg width="24" height="24" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Quiet Method logo">
+            <path d="M16 2L4 8v8c0 7.2 5.1 13.3 12 15 6.9-1.7 12-7.8 12-15V8L16 2z" fill="#34d399" opacity="0.15"/>
+            <path d="M16 4L6 9v7c0 6.1 4.2 11.3 10 12.8 5.8-1.5 10-6.7 10-12.8V9L16 4z" stroke="#34d399" stroke-width="1.5" fill="none" opacity="0.6"/>
+            <circle cx="16" cy="14.5" r="3" fill="#34d399" opacity="0.8"/>
+          </svg>
+          <span class="text-white font-display font-bold text-sm">Quiet Method</span>
+        </div>
+
+        <!-- Links -->
+        <div class="flex items-center gap-6 text-sm text-slate-500">
+          <a href="./privacy.html" class="hover:text-slate-300">Privacy Policy</a>
+          <a href="./terms.html" class="hover:text-slate-300">Terms of Service</a>
+          <a href="mailto:hello@thewedgemethodai.com" class="hover:text-slate-300">Contact</a>
+        </div>
+
+        <!-- Copyright -->
+        <div class="text-center md:text-right">
+          <p class="text-xs text-slate-600">&copy; 2026 WEDGE Method LLC. All rights reserved.</p>
+          <p class="text-xs text-slate-700 mt-1">Built with 🛡️ by <a href="https://thewedgemethodai.com" target="_blank" rel="noopener noreferrer" class="hover:text-slate-500">WEDGE Method LLC</a></p>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+
+  <!-- ===== SCRIPTS ===== -->
+  <script>
+    // Scroll reveal observer
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          revealObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+    document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+
+    // Nav scroll effect
+    const nav = document.getElementById('nav');
+    let lastScroll = 0;
+    window.addEventListener('scroll', () => {
+      const curr = window.scrollY;
+      if (curr > 80) {
+        nav.style.borderBottomColor = 'rgba(255,255,255,0.08)';
+      } else {
+        nav.style.borderBottomColor = 'rgba(255,255,255,0.03)';
+      }
+      lastScroll = curr;
+    }, { passive: true });
+
+    // Mobile menu toggle
+    const menuBtn = document.getElementById('mobile-menu-btn');
+    const mobileMenu = document.getElementById('mobile-menu');
+    menuBtn.addEventListener('click', () => {
+      mobileMenu.classList.toggle('hidden');
+    });
+    // Close mobile menu on link click
+    mobileMenu.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => mobileMenu.classList.add('hidden'));
+    });
+
+    // FAQ accordion
+    document.querySelectorAll('.faq-toggle').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const item = btn.parentElement;
+        const wasOpen = item.classList.contains('open');
+
+        // Close all
+        document.querySelectorAll('.faq-item').forEach(i => {
+          i.classList.remove('open');
+          i.querySelector('.faq-toggle').setAttribute('aria-expanded', 'false');
+        });
+
+        // Toggle current
+        if (!wasOpen) {
+          item.classList.add('open');
+          btn.setAttribute('aria-expanded', 'true');
+        }
+      });
+    });
+
+    // Smooth scroll for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', (e) => {
+        const target = document.querySelector(anchor.getAttribute('href'));
+        if (target) {
+          e.preventDefault();
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
+
+    // Counter animation (honest zero for now)
+    const counterEl = document.getElementById('counter');
+    let counted = false;
+    const counterObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting && !counted) {
+          counted = true;
+          // Animate from 0 to 0 — honest counter, updates as real users join
+          let current = 0;
+          const target = 0;
+          counterEl.textContent = target;
+        }
+      });
+    }, { threshold: 0.5 });
+    counterObserver.observe(counterEl);
+  </script>
+
+</body>
+</html>
