@@ -487,6 +487,111 @@ body {
   color: var(--green);
 }
 
+/* ── Affiliate Recommendations ──────────────────────────────────── */
+.affiliate-section {
+  margin-bottom: 12px;
+}
+
+.affiliate-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.affiliate-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.affiliate-subtitle {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.affiliate-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.affiliate-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  color: inherit;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+  cursor: pointer;
+}
+
+.affiliate-card:hover {
+  background: var(--bg-tertiary);
+  border-color: rgba(99, 102, 241, 0.25);
+  transform: translateX(2px);
+}
+
+.affiliate-card:active {
+  transform: translateX(1px);
+}
+
+.affiliate-icon {
+  font-size: 16px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.affiliate-card-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.affiliate-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.affiliate-tagline {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.affiliate-cta {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--accent);
+  white-space: nowrap;
+  opacity: 0.7;
+  transition: opacity 0.15s ease;
+  flex-shrink: 0;
+}
+
+.affiliate-card:hover .affiliate-cta {
+  opacity: 1;
+}
+
 /* ── Premium ─────────────────────────────────────────────────────── */
 .premium-section {
   margin-bottom: 12px;

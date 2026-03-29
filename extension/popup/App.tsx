@@ -10,6 +10,61 @@ import PulseMeter from './components/PulseMeter';
 import ShareCard from './components/ShareCard';
 import './styles.css';
 
+// ── Affiliate recommendation types ────────────────────────────────────────
+interface Recommendation {
+  name: string;
+  tagline: string;
+  url: string;
+  category: 'focus' | 'meditation' | 'music' | 'productivity';
+}
+
+// Inline recommendations for the popup (avoids cross-context import issues
+// with chrome.storage in the popup environment).
+const ALL_RECOMMENDATIONS: Recommendation[] = [
+  { name: 'Focus@Will',  tagline: 'AI-powered focus music',          url: 'https://www.focusatwill.com/?ref=quietmethod',  category: 'music'        },
+  { name: 'Calm',        tagline: 'Guided breathing exercises',       url: 'https://www.calm.com/?ref=quietmethod',         category: 'meditation'   },
+  { name: 'Brain.fm',    tagline: 'Music designed for focus',         url: 'https://brain.fm/?ref=quietmethod',             category: 'music'        },
+  { name: 'Notion',      tagline: 'Organize your work, reduce chaos', url: 'https://notion.so/?ref=quietmethod',            category: 'productivity' },
+  { name: 'Todoist',     tagline: 'Clear your mind, list your tasks', url: 'https://todoist.com/?ref=quietmethod',          category: 'productivity' },
+  { name: 'Forest App',  tagline: 'Stay focused, grow trees',         url: 'https://www.forestapp.cc/?ref=quietmethod',    category: 'focus'        },
+  { name: 'Headspace',   tagline: 'Meditation for busy minds',        url: 'https://www.headspace.com/?ref=quietmethod',   category: 'meditation'   },
+  { name: 'Noisli',      tagline: 'Background sounds for focus',      url: 'https://www.noisli.com/?ref=quietmethod',      category: 'focus'        },
+];
+
+const CATEGORY_ICONS: Record<string, string> = {
+  focus:       '🎯',
+  meditation:  '🧘',
+  music:       '🎵',
+  productivity:'📋',
+};
+
+function getPopupRecommendations(count = 3): Recommendation[] {
+  return [...ALL_RECOMMENDATIONS]
+    .sort(() => Math.random() - 0.5)
+    .slice(0, count);
+}
+
+function trackAffiliateClick(name: string) {
+  try {
+    chrome.storage.local.get('quietmethod_affiliate_analytics', (stored) => {
+      const analytics = stored.quietmethod_affiliate_analytics ?? {
+        totalNotificationsShown: 0,
+        totalClicks: 0,
+        clicksByName: {},
+        firstRecorded: Date.now(),
+        lastUpdated: Date.now(),
+      };
+      analytics.totalClicks = (analytics.totalClicks ?? 0) + 1;
+      analytics.clicksByName = analytics.clicksByName ?? {};
+      analytics.clicksByName[name] = (analytics.clicksByName[name] ?? 0) + 1;
+      analytics.lastUpdated = Date.now();
+      chrome.storage.local.set({ quietmethod_affiliate_analytics: analytics });
+    });
+  } catch (_) {
+    // Popup context may not always have storage access
+  }
+}
+
 interface GuardState {
   overloadScore: number;
   veilActive: boolean;
@@ -55,6 +110,7 @@ function sendMessage(msg: any): Promise<any> {
 export default function App() {
   const [state, setState] = useState<GuardState>(DEFAULT_STATE);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [recommendations] = useState<Recommendation[]>(() => getPopupRecommendations(3));
 
   // Fetch state from background
   const fetchState = useCallback(async () => {
@@ -222,6 +278,35 @@ export default function App() {
           streakDays={state.streakDays}
           currentScore={state.overloadScore}
         />
+      </section>
+
+      {/* Recommended Tools */}
+      <section className="affiliate-section">
+        <div className="affiliate-header">
+          <span className="affiliate-title">Recommended Tools</span>
+          <span className="affiliate-subtitle">For calmer focus</span>
+        </div>
+        <div className="affiliate-list">
+          {recommendations.map((rec) => (
+            <a
+              key={rec.name}
+              href={rec.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="affiliate-card"
+              onClick={() => trackAffiliateClick(rec.name)}
+            >
+              <span className="affiliate-icon" aria-hidden="true">
+                {CATEGORY_ICONS[rec.category] ?? '✦'}
+              </span>
+              <div className="affiliate-card-body">
+                <div className="affiliate-name">{rec.name}</div>
+                <div className="affiliate-tagline">{rec.tagline}</div>
+              </div>
+              <span className="affiliate-cta">Try it →</span>
+            </a>
+          ))}
+        </div>
       </section>
 
       {/* Premium teaser */}

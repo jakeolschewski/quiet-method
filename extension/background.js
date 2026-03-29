@@ -13,6 +13,8 @@ import {
   unmuteAllTabs,
   showCalmNotification,
 } from './utils/veil.js';
+import { getRecommendation } from './utils/affiliates.js';
+import { recordNotificationShown, recordAffiliateClick } from './utils/analytics.js';
 
 // ── Constants ────────────────────────────────────────────────────────────
 const VEIL_ACTIVATE_THRESHOLD = 0.7;
@@ -255,6 +257,9 @@ async function checkAndApplyVeil(score) {
     await muteAllTabs();
     showCalmNotification();
 
+    // Show affiliate recommendation (max once per hour)
+    await maybeShowAffiliateNotification();
+
     // Update badge
     try {
       await chrome.action.setBadgeText({ text: '🛡️' });
@@ -438,6 +443,79 @@ chrome.runtime.onInstalled.addListener((details) => {
       'Welcome to Quiet Method! We\'ll learn your browsing patterns over the next 5 minutes.',
       'Quiet Method Setup'
     );
+  }
+});
+
+// ── Affiliate Notification ───────────────────────────────────────────────
+const AFFILIATE_COOLDOWN_MS = 60 * 60 * 1000; // 1 hour
+const AFFILIATE_NOTIFICATION_ID = 'quietmethod-affiliate';
+
+async function maybeShowAffiliateNotification() {
+  try {
+    // Enforce once-per-hour rate limit
+    const stored = await chrome.storage.local.get('quietmethod_affiliate_last_shown');
+    const lastShown = stored.quietmethod_affiliate_last_shown ?? 0;
+    if (Date.now() - lastShown < AFFILIATE_COOLDOWN_MS) {
+      return; // Too soon — skip
+    }
+
+    const rec = await getRecommendation();
+    if (!rec) return;
+
+    // Record impression for analytics
+    await recordNotificationShown(rec.name);
+
+    // Persist show timestamp and current recommendation for click tracking
+    await chrome.storage.local.set({
+      quietmethod_affiliate_last_shown: Date.now(),
+      quietmethod_affiliate_pending_click: rec.name,
+      quietmethod_affiliate_pending_url: rec.url,
+    });
+
+    // Show the Chrome notification
+    chrome.notifications.create(AFFILIATE_NOTIFICATION_ID, {
+      type: 'basic',
+      iconUrl: chrome.runtime.getURL('assets/icon-48.png'),
+      title: 'While you\'re calming down...',
+      message: `${rec.name}: ${rec.tagline}`,
+      priority: 1,
+      isClickable: true,
+    });
+
+    console.log('[Quiet Method] Affiliate notification shown:', rec.name);
+  } catch (err) {
+    console.warn('[Quiet Method] Affiliate notification error:', err);
+  }
+}
+
+// Handle affiliate notification clicks — open affiliate URL
+chrome.notifications.onClicked.addListener(async (notificationId) => {
+  if (notificationId !== AFFILIATE_NOTIFICATION_ID) return;
+
+  try {
+    const stored = await chrome.storage.local.get([
+      'quietmethod_affiliate_pending_url',
+      'quietmethod_affiliate_pending_click',
+    ]);
+
+    const url = stored.quietmethod_affiliate_pending_url;
+    const toolName = stored.quietmethod_affiliate_pending_click;
+
+    if (url) {
+      // Open affiliate link in a new tab
+      chrome.tabs.create({ url, active: true });
+    }
+
+    if (toolName) {
+      // Track click for analytics
+      await recordAffiliateClick(toolName);
+      console.log('[Quiet Method] Affiliate click recorded:', toolName);
+    }
+
+    // Dismiss the notification
+    chrome.notifications.clear(notificationId);
+  } catch (err) {
+    console.warn('[Quiet Method] Affiliate click handler error:', err);
   }
 });
 
